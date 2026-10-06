@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'view/screens/home_screen.dart';
 import 'view/screens/login_screen.dart';
@@ -33,29 +34,9 @@ class NewslyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Newsly',
-
           themeMode: themeMode,
-
-          theme: ThemeData.light().copyWith(
-            scaffoldBackgroundColor: const Color(0xFFF5F5F5),
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Color(0xFF3B82F6),
-              elevation: 0,
-              centerTitle: true,
-              foregroundColor: Colors.white,
-            ),
-          ),
-
-          darkTheme: ThemeData.dark().copyWith(
-            scaffoldBackgroundColor: const Color(0xFF1C1C1E),
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Color(0xFF3B82F6),
-              elevation: 0,
-              centerTitle: true,
-              foregroundColor: Colors.white,
-            ),
-          ),
-
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
           home: StreamBuilder<User?>(
             stream: FirebaseAuth.instance.authStateChanges(),
             builder: (context, snapshot) {
