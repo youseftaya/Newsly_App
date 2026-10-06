@@ -1,33 +1,20 @@
 import 'dart:convert';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/news_article.dart';
 
 class NewsService {
-  static const String _baseUrl =
-      'https://gnews.io/api/v4/top-headlines';
-
-  static const String _searchUrl =
-      'https://gnews.io/api/v4/search';
+  static const String _proxyUrl =
+      'https://dawn-grass-64f6.yaha566876.workers.dev';
 
   Future<List<NewsArticle>> getTopHeadlines({
     int page = 1,
   }) async {
-    final apiKey = dotenv.env['GNEWS_API_KEY'];
-
-    if (apiKey == null || apiKey.isEmpty) {
-      throw Exception('GNews API key not found.');
-    }
-
     final uri = Uri.parse(
-      '$_baseUrl?category=general'
-      '&lang=en'
-      '&country=us'
-      '&max=10'
-      '&page=$page'
-      '&apikey=$apiKey',
+      '$_proxyUrl?type=top'
+      '&category=general'
+      '&page=$page',
     );
 
     final response = await http.get(uri);
@@ -56,19 +43,10 @@ class NewsService {
     String query, {
     int page = 1,
   }) async {
-    final apiKey = dotenv.env['GNEWS_API_KEY'];
-
-    if (apiKey == null || apiKey.isEmpty) {
-      throw Exception('GNews API key not found.');
-    }
-
     final uri = Uri.parse(
-      '$_searchUrl?q=${Uri.encodeQueryComponent(query)}'
-      '&lang=en'
-      '&country=us'
-      '&max=10'
-      '&page=$page'
-      '&apikey=$apiKey',
+      '$_proxyUrl?type=search'
+      '&q=${Uri.encodeQueryComponent(query)}'
+      '&page=$page',
     );
 
     final response = await http.get(uri);
@@ -97,19 +75,10 @@ class NewsService {
     String category, {
     int page = 1,
   }) async {
-    final apiKey = dotenv.env['GNEWS_API_KEY'];
-
-    if (apiKey == null || apiKey.isEmpty) {
-      throw Exception('GNews API key not found.');
-    }
-
     final uri = Uri.parse(
-      '$_baseUrl?category=$category'
-      '&lang=en'
-      '&country=us'
-      '&max=10'
-      '&page=$page'
-      '&apikey=$apiKey',
+      '$_proxyUrl?type=category'
+      '&category=$category'
+      '&page=$page',
     );
 
     final response = await http.get(uri);
