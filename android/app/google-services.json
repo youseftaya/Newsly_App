@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1044228442907",
+    "project_id": "newsly-app-yous",
+    "storage_bucket": "newsly-app-yous.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1044228442907:android:490d1c2314158204f3a1be",
+        "android_client_info": {
+          "package_name": "com.example.newsly"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUjGbX7fi18SL3h7gyNtOVXnnoIcxaPX4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
