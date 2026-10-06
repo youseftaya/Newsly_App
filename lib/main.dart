@@ -34,13 +34,17 @@ class NewslyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Newsly',
-
           themeMode: themeMode,
+<<<<<<< HEAD
 
           theme: AppTheme.lightTheme,
 
           darkTheme: AppTheme.darkTheme,
 
+=======
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+>>>>>>> main
           home: StreamBuilder<User?>(
             stream: FirebaseAuth.instance.authStateChanges(),
             builder: (context, snapshot) {
