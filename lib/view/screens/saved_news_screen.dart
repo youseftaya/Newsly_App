@@ -25,7 +25,6 @@ class _SavedNewsScreenState
   @override
   void initState() {
     super.initState();
-
     _loadFavorites();
   }
 
@@ -91,8 +90,7 @@ class _SavedNewsScreenState
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            ArticleScreen(
+        builder: (context) => ArticleScreen(
           article: article,
         ),
       ),
@@ -101,14 +99,20 @@ class _SavedNewsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final isDark =
+        Theme.of(context).brightness ==
+            Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Saved News',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: isDark
+                ? Colors.white
+                : Colors.black87,
           ),
         ),
       ),

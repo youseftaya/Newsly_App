@@ -11,12 +11,10 @@ class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() =>
-      _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState
-    extends State<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final AuthService _authService = AuthService();
 
   final TextEditingController _emailController =
@@ -25,8 +23,7 @@ class _RegisterScreenState
   final TextEditingController _passwordController =
       TextEditingController();
 
-  final TextEditingController
-      _confirmPasswordController =
+  final TextEditingController _confirmPasswordController =
       TextEditingController();
 
   bool _isLoading = false;
@@ -42,28 +39,20 @@ class _RegisterScreenState
   }
 
   Future<void> _register() async {
-    final email =
-        _emailController.text.trim();
-
-    final password =
-        _passwordController.text.trim();
-
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
     final confirmPassword =
         _confirmPasswordController.text.trim();
 
     if (email.isEmpty ||
         password.isEmpty ||
         confirmPassword.isEmpty) {
-      _showMessage(
-        'Please fill in all fields.',
-      );
+      _showMessage('Please fill in all fields.');
       return;
     }
 
     if (password != confirmPassword) {
-      _showMessage(
-        'Passwords do not match.',
-      );
+      _showMessage('Passwords do not match.');
       return;
     }
 
@@ -89,8 +78,7 @@ class _RegisterScreenState
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              const HomeScreen(),
+          builder: (context) => const HomeScreen(),
         ),
         (route) => false,
       );
@@ -98,15 +86,14 @@ class _RegisterScreenState
       if (!mounted) return;
 
       _showMessage(
-        e.toString()
-            .replaceFirst('Exception: ', ''),
+        e.toString().replaceFirst('Exception: ', ''),
       );
     } finally {
-      if (!mounted) return;
-
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -120,8 +107,7 @@ class _RegisterScreenState
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        themeNotifier.value == ThemeMode.dark;
+    final isDark = themeNotifier.value == ThemeMode.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -136,72 +122,50 @@ class _RegisterScreenState
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 30),
-
             Text(
               'Create your account',
               style: TextStyle(
-                color: isDark
-                    ? Colors.white
-                    : Colors.black87,
+                color: isDark ? Colors.white : Colors.black87,
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 10),
-
             Text(
               'Register to save your favorite news.',
               style: TextStyle(
-                color: isDark
-                    ? Colors.grey[400]
-                    : Colors.grey[700],
+                color: isDark ? Colors.grey[400] : Colors.grey[700],
                 fontSize: 15,
               ),
             ),
-
             const SizedBox(height: 35),
-
             Text(
               'Email',
               style: TextStyle(
-                color: isDark
-                    ? Colors.white
-                    : Colors.black87,
+                color: isDark ? Colors.white : Colors.black87,
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 8),
-
             AuthTextField(
               controller: _emailController,
               hintText: 'Enter your email',
-              prefixIcon:
-                  Icons.email_outlined,
-              keyboardType:
-                  TextInputType.emailAddress,
+              prefixIcon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
               isDark: isDark,
             ),
-
             const SizedBox(height: 20),
-
             Text(
               'Password',
               style: TextStyle(
-                color: isDark
-                    ? Colors.white
-                    : Colors.black87,
+                color: isDark ? Colors.white : Colors.black87,
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 8),
-
             AuthPasswordField(
               controller: _passwordController,
               hintText: 'Enter your password',
@@ -209,33 +173,23 @@ class _RegisterScreenState
               isDark: isDark,
               onToggleVisibility: () {
                 setState(() {
-                  _obscurePassword =
-                      !_obscurePassword;
+                  _obscurePassword = !_obscurePassword;
                 });
               },
             ),
-
             const SizedBox(height: 20),
-
             Text(
               'Confirm Password',
               style: TextStyle(
-                color: isDark
-                    ? Colors.white
-                    : Colors.black87,
+                color: isDark ? Colors.white : Colors.black87,
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 8),
-
             AuthPasswordField(
-              controller:
-                  _confirmPasswordController,
-              hintText:
-                  'Confirm your password',
-              obscureText:
-                  _obscureConfirmPassword,
+              controller: _confirmPasswordController,
+              hintText: 'Confirm your password',
+              obscureText: _obscureConfirmPassword,
               isDark: isDark,
               onToggleVisibility: () {
                 setState(() {
@@ -244,9 +198,7 @@ class _RegisterScreenState
                 });
               },
             ),
-
             const SizedBox(height: 30),
-
             AuthButton(
               isLoading: _isLoading,
               text: 'Create Account',
