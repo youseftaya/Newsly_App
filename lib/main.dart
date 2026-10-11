@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/localization/app_localizations.dart';
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'view/screens/login_screen.dart';
@@ -82,10 +84,19 @@ class NewslyApp extends StatelessWidget {
                   theme: AppTheme.lightTheme,
                   darkTheme: AppTheme.darkTheme,
                   locale: locale,
+
                   supportedLocales: const [
                     Locale('en'),
                     Locale('ar'),
                   ],
+
+                  localizationsDelegates: const [
+                    AppLocalizations.delegate,
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                  ],
+
                   builder: (context, child) {
                     final mediaQuery = MediaQuery.of(context);
 
@@ -96,6 +107,7 @@ class NewslyApp extends StatelessWidget {
                       child: child ?? const SizedBox.shrink(),
                     );
                   },
+
                   home: StreamBuilder<User?>(
                     stream: FirebaseAuth.instance.authStateChanges(),
                     builder: (context, snapshot) {

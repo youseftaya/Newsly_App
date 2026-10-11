@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/localization/app_localizations.dart';
 import '../../data/models/news_article.dart';
 import '../../data/services/news_service.dart';
 import '../../data/services/firestore_service.dart';
@@ -25,15 +26,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final NewsService _newsService = NewsService();
-  final FirestoreService _firestoreService =
-      FirestoreService();
+  final FirestoreService _firestoreService = FirestoreService();
   final AuthService _authService = AuthService();
 
   final TextEditingController _searchController =
       TextEditingController();
 
-  final ScrollController _scrollController =
-      ScrollController();
+  final ScrollController _scrollController = ScrollController();
 
   List<NewsArticle> articles = [];
   Set<String> favoriteUrls = {};
@@ -58,6 +57,12 @@ class _HomeScreenState extends State<HomeScreen> {
     {'name': 'Health', 'value': 'health'},
     {'name': 'Science', 'value': 'science'},
   ];
+
+  bool get _isArabic => localeNotifier.value.languageCode == 'ar';
+
+  String _text(String english, String arabic) {
+    return _isArabic ? arabic : english;
+  }
 
   @override
   void initState() {
@@ -85,8 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Load the user's saved articles from Firebase.
   Future<void> _loadFavorites() async {
     try {
-      final favorites =
-          await _firestoreService.getFavorites();
+      final favorites = await _firestoreService.getFavorites();
 
       if (!mounted) return;
 
@@ -101,11 +105,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Add or remove an article from Firebase favorites.
-  Future<void> _toggleFavorite(
-    NewsArticle article,
-  ) async {
-    final isFavorite =
-        favoriteUrls.contains(article.articleUrl);
+  Future<void> _toggleFavorite(NewsArticle article) async {
+    final isFavorite = favoriteUrls.contains(article.articleUrl);
 
     try {
       if (isFavorite) {
@@ -131,7 +132,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Failed to update saved news: $e',
+            _text(
+              'Failed to update saved news.',
+              'فشل تحديث الأخبار المحفوظة.',
+            ),
           ),
         ),
       );
@@ -146,7 +150,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Logout failed: $e'),
+          content: Text(
+            _text(
+              'Logout failed. Please try again.',
+              'فشل تسجيل الخروج. حاول مرة أخرى.',
+            ),
+          ),
         ),
       );
     }
@@ -164,8 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final position = _scrollController.position;
 
-    if (position.pixels >=
-        position.maxScrollExtent - 300) {
+    if (position.pixels >= position.maxScrollExtent - 300) {
       _loadMoreNews();
     }
   }
@@ -302,16 +310,13 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final List<NewsArticle> news;
 
-      if (isSearching &&
-          _searchController.text.trim().isNotEmpty) {
+      if (isSearching && _searchController.text.trim().isNotEmpty) {
         news = await _newsService.searchNews(
           _searchController.text.trim(),
           page: 1,
         );
       } else if (selectedCategory == 'general') {
-        news = await _newsService.getTopHeadlines(
-          page: 1,
-        );
+        news = await _newsService.getTopHeadlines(page: 1);
       } else {
         news = await _newsService.getNewsByCategory(
           selectedCategory,
@@ -338,9 +343,12 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Could not refresh news. Please try again.',
+            _text(
+              'Could not refresh news. Please try again.',
+              'تعذر تحديث الأخبار. حاول مرة أخرى.',
+            ),
           ),
         ),
       );
@@ -370,13 +378,11 @@ class _HomeScreenState extends State<HomeScreen> {
           page: nextPage,
         );
       } else if (selectedCategory == 'general') {
-        newArticles =
-            await _newsService.getTopHeadlines(
+        newArticles = await _newsService.getTopHeadlines(
           page: nextPage,
         );
       } else {
-        newArticles =
-            await _newsService.getNewsByCategory(
+        newArticles = await _newsService.getNewsByCategory(
           selectedCategory,
           page: nextPage,
         );
@@ -385,21 +391,16 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
 
       setState(() {
-        final existingUrls = articles
-            .map((article) => article.articleUrl)
-            .toSet();
+        final existingUrls =
+            articles.map((article) => article.articleUrl).toSet();
 
         final uniqueArticles = newArticles
             .where(
-              (article) =>
-                  !existingUrls.contains(
-                    article.articleUrl,
-                  ),
+              (article) => !existingUrls.contains(article.articleUrl),
             )
             .toList();
 
-        if (newArticles.isEmpty ||
-            uniqueArticles.isEmpty) {
+        if (newArticles.isEmpty || uniqueArticles.isEmpty) {
           hasMore = false;
         } else {
           articles.addAll(uniqueArticles);
@@ -434,9 +435,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ArticleScreen(
-          article: article,
-        ),
+        builder: (context) => ArticleScreen(article: article),
       ),
     );
 
@@ -447,8 +446,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        themeNotifier.value == ThemeMode.dark;
+    final isDark = themeNotifier.value == ThemeMode.dark;
 
     return Scaffold(
       appBar: HomeAppBar(
@@ -471,17 +469,14 @@ class _HomeScreenState extends State<HomeScreen> {
             isDark: isDark,
             onCategorySelected: _loadCategory,
           ),
-          Expanded(
-            child: _buildBody(),
-          ),
+          Expanded(child: _buildBody()),
         ],
       ),
     );
   }
 
   Widget _buildBody() {
-    final isDark =
-        themeNotifier.value == ThemeMode.dark;
+    final isDark = themeNotifier.value == ThemeMode.dark;
 
     if (isLoading) {
       return const Center(
@@ -503,19 +498,22 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                errorMessage!,
+                _text(
+                  'Could not load news. Please try again.',
+                  'تعذر تحميل الأخبار. حاول مرة أخرى.',
+                ),
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isDark
-                      ? Colors.white
-                      : Colors.black87,
+                  color: isDark ? Colors.white : Colors.black87,
                   fontSize: 16,
                 ),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _refreshNews,
-                child: const Text('Try Again'),
+                child: Text(
+                  _text('Try Again', 'حاول مرة أخرى'),
+                ),
               ),
             ],
           ),
@@ -527,20 +525,24 @@ class _HomeScreenState extends State<HomeScreen> {
       return RefreshIndicator(
         onRefresh: _refreshNews,
         child: ListView(
-          physics:
-              const AlwaysScrollableScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
             SizedBox(
               height: 300,
               child: Center(
                 child: Text(
                   isSearching
-                      ? 'No news found.'
-                      : 'No news available.',
+                      ? _text(
+                          'No news found.',
+                          'لم يتم العثور على أخبار.',
+                        )
+                      : _text(
+                          'No news available.',
+                          'لا توجد أخبار متاحة حاليًا.',
+                        ),
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: isDark
-                        ? Colors.white
-                        : Colors.black87,
+                    color: isDark ? Colors.white : Colors.black87,
                     fontSize: 16,
                   ),
                 ),
@@ -554,18 +556,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return RefreshIndicator(
       onRefresh: _refreshNews,
       child: ListView.builder(
-        physics:
-            const AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(),
         controller: _scrollController,
         padding: const EdgeInsets.all(16),
-        itemCount:
-            articles.length + (isLoadingMore ? 1 : 0),
+        itemCount: articles.length + (isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == articles.length) {
             return const Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: 20,
-              ),
+              padding: EdgeInsets.symmetric(vertical: 20),
               child: Center(
                 child: CircularProgressIndicator(),
               ),
@@ -573,16 +571,12 @@ class _HomeScreenState extends State<HomeScreen> {
           }
 
           final article = articles[index];
-          final isFavorite =
-              favoriteUrls.contains(
-            article.articleUrl,
-          );
+          final isFavorite = favoriteUrls.contains(article.articleUrl);
 
           return NewsCard(
             article: article,
             isFavorite: isFavorite,
-            onFavorite: () =>
-                _toggleFavorite(article),
+            onFavorite: () => _toggleFavorite(article),
             onTap: () => _openArticle(article),
           );
         },

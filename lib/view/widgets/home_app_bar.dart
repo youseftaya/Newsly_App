@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../main.dart';
+
 class HomeAppBar extends StatefulWidget
     implements PreferredSizeWidget {
   final bool isDark;
@@ -18,16 +20,16 @@ class HomeAppBar extends StatefulWidget
   });
 
   @override
-  State<HomeAppBar> createState() =>
-      _HomeAppBarState();
+  State<HomeAppBar> createState() => _HomeAppBarState();
 
   @override
-  Size get preferredSize =>
-      const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
 class _HomeAppBarState extends State<HomeAppBar> {
   Uint8List? _profileImageBytes;
+
+  bool get _isArabic => localeNotifier.value.languageCode == 'ar';
 
   @override
   void initState() {
@@ -37,31 +39,24 @@ class _HomeAppBarState extends State<HomeAppBar> {
 
   Future<void> _loadProfileImage() async {
     try {
-      final prefs =
-          await SharedPreferences.getInstance();
-
-      final savedImage =
-          prefs.getString('newsly_profile_image');
+      final prefs = await SharedPreferences.getInstance();
+      final savedImage = prefs.getString('newsly_profile_image');
 
       if (!mounted) return;
 
       setState(() {
-        _profileImageBytes = savedImage != null
-            ? base64Decode(savedImage)
-            : null;
+        _profileImageBytes =
+            savedImage != null ? base64Decode(savedImage) : null;
       });
     } catch (e) {
-      debugPrint(
-        'Error loading profile image: $e',
-      );
+      debugPrint('Error loading profile image: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final foregroundColor = widget.isDark
-        ? Colors.white
-        : Colors.black87;
+    final foregroundColor =
+        widget.isDark ? Colors.white : Colors.black87;
 
     return AppBar(
       centerTitle: true,
@@ -73,15 +68,11 @@ class _HomeAppBarState extends State<HomeAppBar> {
         child: Center(
           child: CircleAvatar(
             radius: 19,
-            backgroundColor: widget.isDark
-                ? Colors.white24
-                : Colors.black12,
-            backgroundImage:
-                _profileImageBytes != null
-                    ? MemoryImage(
-                        _profileImageBytes!,
-                      )
-                    : null,
+            backgroundColor:
+                widget.isDark ? Colors.white24 : Colors.black12,
+            backgroundImage: _profileImageBytes != null
+                ? MemoryImage(_profileImageBytes!)
+                : null,
             child: _profileImageBytes == null
                 ? Icon(
                     Icons.person,
@@ -110,19 +101,17 @@ class _HomeAppBarState extends State<HomeAppBar> {
             Icons.refresh_rounded,
             color: foregroundColor,
           ),
-          tooltip: 'Refresh News',
+          tooltip: _isArabic ? 'تحديث الأخبار' : 'Refresh News',
         ),
         IconButton(
           onPressed: widget.onToggleTheme,
           icon: Icon(
-            widget.isDark
-                ? Icons.light_mode
-                : Icons.dark_mode,
+            widget.isDark ? Icons.light_mode : Icons.dark_mode,
             color: foregroundColor,
           ),
           tooltip: widget.isDark
-              ? 'Light Mode'
-              : 'Dark Mode',
+              ? (_isArabic ? 'الوضع الفاتح' : 'Light Mode')
+              : (_isArabic ? 'الوضع الداكن' : 'Dark Mode'),
         ),
       ],
     );

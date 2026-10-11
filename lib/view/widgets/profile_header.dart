@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../../core/localization/app_localizations.dart';
+
 class ProfileHeader extends StatelessWidget {
   final Uint8List? imageBytes;
   final bool isLoadingImage;
@@ -27,6 +29,7 @@ class ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       children: [
@@ -39,8 +42,7 @@ class ProfileHeader extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 48,
-                backgroundColor:
-                    _primaryColor.withValues(alpha: 0.15),
+                backgroundColor: _primaryColor.withValues(alpha: 0.15),
                 backgroundImage: imageBytes != null
                     ? MemoryImage(imageBytes!)
                     : null,
@@ -99,7 +101,7 @@ class ProfileHeader extends StatelessWidget {
               ),
             ),
             IconButton(
-              tooltip: 'Edit name',
+              tooltip: l10n.editName,
               onPressed: isSavingName ? null : onEditName,
               icon: isSavingName
                   ? const SizedBox(
@@ -124,8 +126,7 @@ class ProfileHeader extends StatelessWidget {
           email,
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface
-                .withValues(alpha: 0.65),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
           ),
         ),
       ],

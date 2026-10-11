@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/models/news_article.dart';
 import '../../data/services/firestore_service.dart';
+import '../../main.dart';
 import '../widgets/article_image.dart';
 
 class ArticleScreen extends StatefulWidget {
@@ -25,6 +26,12 @@ class _ArticleScreenState extends State<ArticleScreen> {
   bool isFavorite = false;
   bool isLoadingFavorite = true;
   bool isSavingFavorite = false;
+
+  bool get _isArabic => localeNotifier.value.languageCode == 'ar';
+
+  String _text(String english, String arabic) {
+    return _isArabic ? arabic : english;
+  }
 
   @override
   void initState() {
@@ -53,6 +60,7 @@ class _ArticleScreenState extends State<ArticleScreen> {
       });
     } catch (e) {
       if (!mounted) return;
+
       setState(() => isLoadingFavorite = false);
       debugPrint('Could not load favorite: $e');
     }
@@ -62,7 +70,12 @@ class _ArticleScreenState extends State<ArticleScreen> {
     if (isSavingFavorite) return;
 
     if (FirebaseAuth.instance.currentUser == null) {
-      _showMessage('Please log in to save articles.');
+      _showMessage(
+        _text(
+          'Please log in to save articles.',
+          'سجّل الدخول لحفظ المقالات.',
+        ),
+      );
       return;
     }
 
@@ -88,15 +101,27 @@ class _ArticleScreenState extends State<ArticleScreen> {
 
       _showMessage(
         isFavorite
-            ? 'Article added to Saved News.'
-            : 'Article removed from Saved News.',
+            ? _text(
+                'Article added to Saved News.',
+                'تمت إضافة المقال إلى الأخبار المحفوظة.',
+              )
+            : _text(
+                'Article removed from Saved News.',
+                'تمت إزالة المقال من الأخبار المحفوظة.',
+              ),
       );
     } catch (e) {
       if (!mounted) return;
 
       setState(() => isSavingFavorite = false);
 
-      _showMessage('Could not update saved news. Please try again.');
+      _showMessage(
+        _text(
+          'Could not update saved news. Please try again.',
+          'تعذر تحديث الأخبار المحفوظة. حاول مرة أخرى.',
+        ),
+      );
+
       debugPrint('Favorite error: $e');
     }
   }
@@ -105,7 +130,12 @@ class _ArticleScreenState extends State<ArticleScreen> {
     final url = widget.article.articleUrl.trim();
 
     if (url.isEmpty) {
-      _showMessage('Article link is not available.');
+      _showMessage(
+        _text(
+          'Article link is not available.',
+          'رابط المقال غير متاح.',
+        ),
+      );
       return;
     }
 
@@ -118,7 +148,13 @@ class _ArticleScreenState extends State<ArticleScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      _showMessage('Could not share the article.');
+
+      _showMessage(
+        _text(
+          'Could not share the article.',
+          'تعذرت مشاركة المقال.',
+        ),
+      );
     }
   }
 
@@ -128,7 +164,12 @@ class _ArticleScreenState extends State<ArticleScreen> {
     if (uri == null ||
         !{'http', 'https'}.contains(uri.scheme) ||
         uri.host.isEmpty) {
-      _showMessage('Article link is not available.');
+      _showMessage(
+        _text(
+          'Article link is not available.',
+          'رابط المقال غير متاح.',
+        ),
+      );
       return;
     }
 
@@ -139,11 +180,21 @@ class _ArticleScreenState extends State<ArticleScreen> {
       );
 
       if (!opened && mounted) {
-        _showMessage('Could not open the article.');
+        _showMessage(
+          _text(
+            'Could not open the article.',
+            'تعذر فتح المقال.',
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        _showMessage('Could not open the article.');
+        _showMessage(
+          _text(
+            'Could not open the article.',
+            'تعذر فتح المقال.',
+          ),
+        );
       }
     }
   }
@@ -171,7 +222,6 @@ class _ArticleScreenState extends State<ArticleScreen> {
   @override
   Widget build(BuildContext context) {
     final article = widget.article;
-
     final isDark =
         Theme.of(context).brightness == Brightness.dark;
 
@@ -183,11 +233,17 @@ class _ArticleScreenState extends State<ArticleScreen> {
 
     final publishedDate = _formatDate(article.publishedAt);
 
+    final textDirection =
+        _isArabic ? TextDirection.rtl : TextDirection.ltr;
+
+    final textAlignment =
+        _isArabic ? TextAlign.right : TextAlign.left;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'News Details',
-          style: TextStyle(
+        title: Text(
+          _text('News Details', 'تفاصيل الخبر'),
+          style: const TextStyle(
             fontSize: 21,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -196,18 +252,20 @@ class _ArticleScreenState extends State<ArticleScreen> {
         actions: [
           IconButton(
             onPressed: _shareArticle,
-            tooltip: 'Share article',
+            tooltip: _text('Share article', 'مشاركة المقال'),
             icon: const Icon(
               Icons.share_rounded,
               color: Colors.white,
             ),
           ),
           IconButton(
-            onPressed:
-                isSavingFavorite ? null : _toggleFavorite,
+            onPressed: isSavingFavorite ? null : _toggleFavorite,
             tooltip: isFavorite
-                ? 'Remove from Saved News'
-                : 'Save article',
+                ? _text(
+                    'Remove from Saved News',
+                    'إزالة من الأخبار المحفوظة',
+                  )
+                : _text('Save article', 'حفظ المقال'),
             icon: isSavingFavorite || isLoadingFavorite
                 ? const SizedBox(
                     width: 22,
@@ -229,134 +287,147 @@ class _ArticleScreenState extends State<ArticleScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: ArticleImage(
-                imageUrl: article.imageUrl,
-                height: 230,
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 7,
-              ),
-              decoration: BoxDecoration(
-                color: const Color(0xFF3B82F6)
-                    .withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                article.category,
-                style: const TextStyle(
-                  color: Color(0xFF3B82F6),
-                  fontWeight: FontWeight.w600,
+      body: Directionality(
+        textDirection: textDirection,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: ArticleImage(
+                  imageUrl: article.imageUrl,
+                  height: 230,
                 ),
               ),
-            ),
-            const SizedBox(height: 14),
+              const SizedBox(height: 20),
 
-            Text(
-              article.title,
-              style: TextStyle(
-                color: primaryText,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                Icon(
-                  Icons.public_rounded,
-                  size: 18,
-                  color: secondaryText,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
                 ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    article.category,
-                    style: TextStyle(
-                      color: secondaryText,
-                      fontSize: 13,
-                    ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3B82F6)
+                      .withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  article.category,
+                  textAlign: textAlignment,
+                  style: const TextStyle(
+                    color: Color(0xFF3B82F6),
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (publishedDate != null) ...[
+              ),
+              const SizedBox(height: 14),
+
+              Text(
+                article.title,
+                textAlign: textAlignment,
+                style: TextStyle(
+                  color: primaryText,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              Row(
+                children: [
                   Icon(
-                    Icons.calendar_today_rounded,
-                    size: 15,
+                    Icons.public_rounded,
+                    size: 18,
                     color: secondaryText,
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    publishedDate,
-                    style: TextStyle(
-                      color: secondaryText,
-                      fontSize: 13,
+                  Expanded(
+                    child: Text(
+                      article.category,
+                      textAlign: textAlignment,
+                      style: TextStyle(
+                        color: secondaryText,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
+                  if (publishedDate != null) ...[
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      size: 15,
+                      color: secondaryText,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      publishedDate,
+                      style: TextStyle(
+                        color: secondaryText,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            Text(
-              'About this story',
-              style: TextStyle(
-                color: primaryText,
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
               ),
-            ),
-            const SizedBox(height: 10),
+              const SizedBox(height: 24),
 
-            Text(
-              article.description,
-              style: TextStyle(
-                color: isDark
-                    ? Colors.grey[300]
-                    : Colors.grey[800],
-                fontSize: 16,
-                height: 1.7,
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _openArticle,
-                icon: const Icon(Icons.open_in_new_rounded),
-                label: const Text(
-                  'Read Full Article',
+              Align(
+                alignment: _isArabic
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
+                child: Text(
+                  _text('About this story', 'عن هذا الخبر'),
+                  textAlign: textAlignment,
                   style: TextStyle(
-                    fontSize: 16,
+                    color: primaryText,
+                    fontSize: 19,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3B82F6),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 16,
+              ),
+              const SizedBox(height: 10),
+
+              Text(
+                article.description,
+                textAlign: textAlignment,
+                style: TextStyle(
+                  color: isDark
+                      ? Colors.grey[300]
+                      : Colors.grey[800],
+                  fontSize: 16,
+                  height: 1.7,
+                ),
+              ),
+              const SizedBox(height: 28),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _openArticle,
+                  icon: const Icon(Icons.open_in_new_rounded),
+                  label: Text(
+                    _text('Read Full Article', 'اقرأ المقال كاملًا'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3B82F6),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

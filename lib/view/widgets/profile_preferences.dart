@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/localization/app_localizations.dart';
 import 'profile_settings_card.dart';
 
 class ProfilePreferences extends StatelessWidget {
@@ -34,6 +35,7 @@ class ProfilePreferences extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,7 +43,7 @@ class ProfilePreferences extends StatelessWidget {
         const SizedBox(height: 32),
 
         Text(
-          'Preferences',
+          l10n.preferences,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -59,10 +61,8 @@ class ProfilePreferences extends StatelessWidget {
                   : Icons.light_mode_rounded,
               color: _primaryColor,
             ),
-            title: const Text('Dark Mode'),
-            subtitle: const Text(
-              'Change the appearance of Newsly',
-            ),
+            title: Text(l10n.darkMode),
+            subtitle: Text(l10n.changeAppearance),
             value: isDarkMode,
             activeTrackColor: _primaryColor,
             onChanged: onDarkModeChanged,
@@ -79,7 +79,7 @@ class ProfilePreferences extends StatelessWidget {
               Icons.language_rounded,
               color: _primaryColor,
             ),
-            title: const Text('Language'),
+            title: Text(l10n.language),
             subtitle: Text(language),
             trailing: const Icon(
               Icons.chevron_right_rounded,
@@ -98,8 +98,8 @@ class ProfilePreferences extends StatelessWidget {
               Icons.text_fields_rounded,
               color: _primaryColor,
             ),
-            title: const Text('Font Size'),
-            subtitle: Text(fontSize),
+            title: Text(l10n.fontSize),
+            subtitle: Text(_translatedFontSize(l10n)),
             trailing: const Icon(
               Icons.chevron_right_rounded,
             ),
@@ -117,10 +117,8 @@ class ProfilePreferences extends StatelessWidget {
               Icons.notifications_active_outlined,
               color: _primaryColor,
             ),
-            title: const Text('Notifications'),
-            subtitle: const Text(
-              'Save your notification preference',
-            ),
+            title: Text(l10n.notifications),
+            subtitle: Text(l10n.saveNotificationPreference),
             value: notificationsEnabled,
             activeTrackColor: _primaryColor,
             onChanged: onNotificationsChanged,
@@ -137,14 +135,25 @@ class ProfilePreferences extends StatelessWidget {
               Icons.logout_rounded,
               color: Colors.redAccent,
             ),
-            title: const Text('Log Out'),
-            subtitle: const Text(
-              'Sign out of your account',
-            ),
+            title: Text(l10n.logOut),
+            subtitle: Text(l10n.signOutAccount),
             onTap: onLogout,
           ),
         ),
       ],
     );
+  }
+
+  String _translatedFontSize(AppLocalizations l10n) {
+    switch (fontSize) {
+      case 'Small':
+        return l10n.small;
+      case 'Medium':
+        return l10n.medium;
+      case 'Large':
+        return l10n.large;
+      default:
+        return fontSize;
+    }
   }
 }

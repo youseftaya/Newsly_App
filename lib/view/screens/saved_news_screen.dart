@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/models/news_article.dart';
 import '../../data/services/firestore_service.dart';
+import '../../main.dart';
 import '../widgets/news_card.dart';
 import 'article_screen.dart';
 
@@ -9,18 +10,20 @@ class SavedNewsScreen extends StatefulWidget {
   const SavedNewsScreen({super.key});
 
   @override
-  State<SavedNewsScreen> createState() =>
-      _SavedNewsScreenState();
+  State<SavedNewsScreen> createState() => _SavedNewsScreenState();
 }
 
-class _SavedNewsScreenState
-    extends State<SavedNewsScreen> {
-  final FirestoreService _firestoreService =
-      FirestoreService();
+class _SavedNewsScreenState extends State<SavedNewsScreen> {
+  final FirestoreService _firestoreService = FirestoreService();
 
   List<NewsArticle> favorites = [];
-
   bool isLoading = true;
+
+  bool get _isArabic => localeNotifier.value.languageCode == 'ar';
+
+  String _text(String english, String arabic) {
+    return _isArabic ? arabic : english;
+  }
 
   @override
   void initState() {
@@ -30,8 +33,7 @@ class _SavedNewsScreenState
 
   Future<void> _loadFavorites() async {
     try {
-      final savedArticles =
-          await _firestoreService.getFavorites();
+      final savedArticles = await _firestoreService.getFavorites();
 
       if (!mounted) return;
 
@@ -49,40 +51,55 @@ class _SavedNewsScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Failed to load saved news: $e',
+            _text(
+              'Failed to load saved news.',
+              'فشل تحميل الأخبار المحفوظة.',
+            ),
           ),
         ),
       );
+
+      debugPrint('Failed to load saved news: $e');
     }
   }
 
-  Future<void> _removeFavorite(
-    NewsArticle article,
-  ) async {
+  Future<void> _removeFavorite(NewsArticle article) async {
     try {
-      await _firestoreService.removeFavorite(
-        article,
-      );
+      await _firestoreService.removeFavorite(article);
 
       if (!mounted) return;
 
       setState(() {
         favorites.removeWhere(
-          (item) =>
-              item.articleUrl ==
-              article.articleUrl,
+          (item) => item.articleUrl == article.articleUrl,
         );
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _text(
+              'Article removed from Saved News.',
+              'تمت إزالة المقال من الأخبار المحفوظة.',
+            ),
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Failed to remove saved news: $e',
+            _text(
+              'Failed to remove saved news.',
+              'فشلت إزالة المقال من الأخبار المحفوظة.',
+            ),
           ),
         ),
       );
+
+      debugPrint('Failed to remove saved news: $e');
     }
   }
 
@@ -100,19 +117,16 @@ class _SavedNewsScreenState
   @override
   Widget build(BuildContext context) {
     final isDark =
-        Theme.of(context).brightness ==
-            Brightness.dark;
+        Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Saved News',
+          _text('Saved News', 'الأخبار المحفوظة'),
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: isDark
-                ? Colors.white
-                : Colors.black87,
+            color: isDark ? Colors.white : Colors.black87,
           ),
         ),
       ),
@@ -122,8 +136,7 @@ class _SavedNewsScreenState
 
   Widget _buildBody() {
     final isDark =
-        Theme.of(context).brightness ==
-            Brightness.dark;
+        Theme.of(context).brightness == Brightness.dark;
 
     if (isLoading) {
       return const Center(
@@ -134,8 +147,7 @@ class _SavedNewsScreenState
     if (favorites.isEmpty) {
       return Center(
         child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(
               Icons.star_border,
@@ -144,11 +156,13 @@ class _SavedNewsScreenState
             ),
             const SizedBox(height: 16),
             Text(
-              'No saved news yet.',
+              _text(
+                'No saved news yet.',
+                'لا توجد أخبار محفوظة حتى الآن.',
+              ),
+              textAlign: TextAlign.center,
               style: TextStyle(
-                color: isDark
-                    ? Colors.white
-                    : Colors.black87,
+                color: isDark ? Colors.white : Colors.black87,
                 fontSize: 17,
               ),
             ),

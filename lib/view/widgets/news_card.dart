@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/models/news_article.dart';
+import '../../main.dart';
 import 'article_image.dart';
 
 class NewsCard extends StatelessWidget {
@@ -16,6 +17,8 @@ class NewsCard extends StatelessWidget {
     required this.onFavorite,
     required this.onTap,
   });
+
+  bool get _isArabic => localeNotifier.value.languageCode == 'ar';
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +53,13 @@ class NewsCard extends StatelessWidget {
                     ),
                     child: IconButton(
                       onPressed: onFavorite,
+                      tooltip: isFavorite
+                          ? (_isArabic
+                              ? 'إزالة من المحفوظات'
+                              : 'Remove from saved news')
+                          : (_isArabic
+                              ? 'حفظ الخبر'
+                              : 'Save article'),
                       icon: Icon(
                         isFavorite
                             ? Icons.star
@@ -64,25 +74,44 @@ class NewsCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Text(
-              article.category,
-              style: TextStyle(
-                color: isDark
-                    ? Colors.grey[400]
-                    : Colors.grey[700],
-                fontSize: 14,
+            Align(
+              alignment: _isArabic
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
+              child: Text(
+                article.category,
+                textAlign: _isArabic
+                    ? TextAlign.right
+                    : TextAlign.left,
+                style: TextStyle(
+                  color: isDark
+                      ? Colors.grey[400]
+                      : Colors.grey[700],
+                  fontSize: 14,
+                ),
               ),
             ),
             const SizedBox(height: 6),
-            Text(
-              article.title,
-              style: TextStyle(
-                color: isDark
-                    ? Colors.white
-                    : Colors.black87,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                height: 1.3,
+            Align(
+              alignment: _isArabic
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
+              child: Text(
+                article.title,
+                textDirection: _isArabic
+                    ? TextDirection.rtl
+                    : TextDirection.ltr,
+                textAlign: _isArabic
+                    ? TextAlign.right
+                    : TextAlign.left,
+                style: TextStyle(
+                  color: isDark
+                      ? Colors.white
+                      : Colors.black87,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  height: 1.3,
+                ),
               ),
             ),
           ],
