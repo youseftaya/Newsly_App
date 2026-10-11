@@ -7,6 +7,7 @@ import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/localization/app_localizations.dart';
 import '../../data/services/auth_service.dart';
 import '../../main.dart';
 import '../widgets/profile_header.dart';
@@ -29,6 +30,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _displayName = '';
   String _language = 'English';
   String _fontSize = 'Medium';
+
+  bool get _isArabic => localeNotifier.value.languageCode == 'ar';
+
+  String _text(String english, String arabic) {
+    return _isArabic ? arabic : english;
+  }
 
   @override
   void initState() {
@@ -57,7 +64,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       setState(() {
         _profileImageBytes = imageBytes;
-        _displayName = prefs.getString('newsly_profile_name') ??
+        _displayName =
+            prefs.getString('newsly_profile_name') ??
             user?.displayName ??
             '';
         _language = prefs.getString('newsly_language') ?? 'English';
@@ -79,34 +87,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // Edit and save profile name.
   Future<void> _editName() async {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController(text: _displayName);
 
     final newName = await showDialog<String>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Edit Name'),
+          title: Text(l10n.editName),
           content: TextField(
             controller: controller,
             autofocus: true,
             maxLength: 50,
             textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(
-              labelText: 'Full name',
-              hintText: 'Enter your name',
-              prefixIcon: Icon(Icons.person_outline_rounded),
+            decoration: InputDecoration(
+              labelText: l10n.fullName,
+              hintText: l10n.enterName,
+              prefixIcon: const Icon(Icons.person_outline_rounded),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(dialogContext, controller.text.trim());
               },
-              child: const Text('Save'),
+              child: Text(l10n.save),
             ),
           ],
         );
@@ -118,7 +127,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (newName == null) return;
 
     if (newName.isEmpty) {
-      _showMessage('Name cannot be empty.');
+      _showMessage(l10n.nameCannotBeEmpty);
       return;
     }
 
@@ -140,7 +149,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isSavingName = false;
       });
 
-      _showMessage('Name updated successfully.');
+      _showMessage(l10n.nameUpdated);
     } catch (e) {
       debugPrint('Failed to update name: $e');
 
@@ -150,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isSavingName = false;
       });
 
-      _showMessage('Could not update your name.');
+      _showMessage(l10n.nameUpdateFailed);
     }
   }
 
@@ -170,7 +179,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final decodedImage = img.decodeImage(originalBytes);
 
       if (decodedImage == null) {
-        _showMessage('Could not read the selected image.');
+        _showMessage(
+          _text(
+            'Could not read the selected image.',
+            'تعذرت قراءة الصورة المحددة.',
+          ),
+        );
         return;
       }
 
@@ -193,7 +207,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
 
       if (!saved) {
-        _showMessage('Could not save the image.');
+        _showMessage(
+          _text('Could not save the image.', 'تعذر حفظ الصورة.'),
+        );
         return;
       }
 
@@ -201,13 +217,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _profileImageBytes = compressedBytes;
       });
 
-      _showMessage('Profile picture updated successfully.');
+      _showMessage(AppLocalizations.of(context).profilePictureUpdated);
     } catch (e) {
       debugPrint('Failed to update profile image: $e');
 
       if (!mounted) return;
 
-      _showMessage('Could not select the image. Please try again.');
+      _showMessage(
+        _text(
+          'Could not select the image. Please try again.',
+          'تعذر اختيار الصورة. حاول مرة أخرى.',
+        ),
+      );
     }
   }
 
@@ -223,16 +244,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _profileImageBytes = null;
       });
 
-      _showMessage('Profile picture removed.');
+      _showMessage(AppLocalizations.of(context).profilePictureRemoved);
     } catch (e) {
       if (!mounted) return;
 
-      _showMessage('Could not remove the profile picture.');
+      _showMessage(
+        _text(
+          'Could not remove the profile picture.',
+          'تعذر حذف الصورة الشخصية.',
+        ),
+      );
     }
   }
 
   // Display image options.
   void _showPhotoOptions() {
+    final l10n = AppLocalizations.of(context);
+
     showModalBottomSheet<void>(
       context: context,
       builder: (sheetContext) {
@@ -241,7 +269,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.photo_library_rounded),
-                title: const Text('Choose from gallery'),
+                title: Text(l10n.chooseFromGallery),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   _pickProfileImage();
@@ -253,7 +281,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Icons.delete_outline_rounded,
                     color: Colors.redAccent,
                   ),
-                  title: const Text('Remove profile picture'),
+                  title: Text(l10n.removeProfilePicture),
                   onTap: () {
                     Navigator.pop(sheetContext);
                     _removeProfileImage();
@@ -268,16 +296,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // Change language preference.
   Future<void> _chooseLanguage() async {
+    final l10n = AppLocalizations.of(context);
+
     final selected = await showDialog<String>(
       context: context,
       builder: (dialogContext) {
         return SimpleDialog(
-          title: const Text('Choose Language'),
+          title: Text(l10n.chooseLanguage),
           children: [
             RadioListTile<String>(
               value: 'English',
               groupValue: _language,
-              title: const Text('English'),
+              title: Text(l10n.english),
               onChanged: (value) {
                 Navigator.pop(dialogContext, value);
               },
@@ -285,7 +315,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             RadioListTile<String>(
               value: 'العربية',
               groupValue: _language,
-              title: const Text('العربية'),
+              title: Text(l10n.arabic),
               onChanged: (value) {
                 Navigator.pop(dialogContext, value);
               },
@@ -313,28 +343,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
 
       _showMessage(
-        'Language saved. Full translation requires localization setup.',
+        _text(
+          'Language updated successfully.',
+          'تم تغيير اللغة بنجاح.',
+        ),
       );
     } catch (e) {
       if (!mounted) return;
 
-      _showMessage('Could not save language preference.');
+      _showMessage(
+        _text(
+          'Could not save language preference.',
+          'تعذر حفظ إعداد اللغة.',
+        ),
+      );
     }
   }
 
   // Change font size across the application.
   Future<void> _chooseFontSize() async {
+    final l10n = AppLocalizations.of(context);
+
     final selected = await showDialog<String>(
       context: context,
       builder: (dialogContext) {
         return SimpleDialog(
-          title: const Text('Choose Font Size'),
+          title: Text(
+            _text('Choose Font Size', 'اختر حجم الخط'),
+          ),
           children: [
             for (final size in ['Small', 'Medium', 'Large'])
               RadioListTile<String>(
                 value: size,
                 groupValue: _fontSize,
-                title: Text(size),
+                title: Text(
+                  switch (size) {
+                    'Small' => l10n.small,
+                    'Large' => l10n.large,
+                    _ => l10n.medium,
+                  },
+                ),
                 onChanged: (value) {
                   Navigator.pop(dialogContext, value);
                 },
@@ -363,11 +411,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _fontSize = selected;
       });
 
-      _showMessage('Font size updated.');
+      _showMessage(
+        AppLocalizations.of(context).fontSizeUpdated,
+      );
     } catch (e) {
       if (!mounted) return;
 
-      _showMessage('Could not save font size preference.');
+      _showMessage(
+        _text(
+          'Could not save font size preference.',
+          'تعذر حفظ إعداد حجم الخط.',
+        ),
+      );
     }
   }
 
@@ -383,7 +438,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      _showMessage('Could not save theme preference.');
+      _showMessage(
+        _text(
+          'Could not save theme preference.',
+          'تعذر حفظ إعداد المظهر.',
+        ),
+      );
     }
   }
 
@@ -405,13 +465,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       _showMessage(
         enabled
-            ? 'Notification preference enabled.'
-            : 'Notification preference disabled.',
+            ? _text(
+                'Notifications enabled.',
+                'تم تفعيل الإشعارات.',
+              )
+            : _text(
+                'Notifications disabled.',
+                'تم إيقاف الإشعارات.',
+              ),
       );
     } catch (e) {
       if (!mounted) return;
 
-      _showMessage('Could not save notification settings.');
+      _showMessage(
+        _text(
+          'Could not save notification settings.',
+          'تعذر حفظ إعدادات الإشعارات.',
+        ),
+      );
     }
   }
 
@@ -422,7 +493,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      _showMessage('Logout failed. Please try again.');
+      _showMessage(
+        _text(
+          'Logout failed. Please try again.',
+          'فشل تسجيل الخروج. حاول مرة أخرى.',
+        ),
+      );
     }
   }
 
@@ -443,6 +519,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final user = FirebaseAuth.instance.currentUser;
     final isDark = theme.brightness == Brightness.dark;
 
@@ -450,13 +527,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ? _displayName
         : (user?.displayName?.isNotEmpty == true
             ? user!.displayName!
-            : 'Add your name');
+            : l10n.addYourName);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Profile',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.profile,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: ListView(
@@ -467,7 +544,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             isLoadingImage: _isLoadingImage,
             isSavingName: _isSavingName,
             name: name,
-            email: user?.email ?? 'No email available',
+            email: user?.email ?? l10n.noEmail,
             onPhotoTap: _showPhotoOptions,
             onEditName: _editName,
           ),
