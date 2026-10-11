@@ -12,8 +12,7 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() =>
-      _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -36,11 +35,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    final email =
-        _emailController.text.trim();
-
-    final password =
-        _passwordController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       _showMessage(
@@ -64,8 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              const HomeScreen(),
+          builder: (context) => const HomeScreen(),
         ),
         (route) => false,
       );
@@ -73,15 +68,14 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       _showMessage(
-        e.toString()
-            .replaceFirst('Exception: ', ''),
+        e.toString().replaceFirst('Exception: ', ''),
       );
     } finally {
-      if (!mounted) return;
-
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -97,16 +91,14 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            const RegisterScreen(),
+        builder: (context) => const RegisterScreen(),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        themeNotifier.value == ThemeMode.dark;
+    final isDark = themeNotifier.value == ThemeMode.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -121,72 +113,50 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 30),
-
             Text(
               'Welcome Back',
               style: TextStyle(
-                color: isDark
-                    ? Colors.white
-                    : Colors.black87,
+                color: isDark ? Colors.white : Colors.black87,
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 10),
-
             Text(
               'Login to access your saved news.',
               style: TextStyle(
-                color: isDark
-                    ? Colors.grey[400]
-                    : Colors.grey[700],
+                color: isDark ? Colors.grey[400] : Colors.grey[700],
                 fontSize: 15,
               ),
             ),
-
             const SizedBox(height: 35),
-
             Text(
               'Email',
               style: TextStyle(
-                color: isDark
-                    ? Colors.white
-                    : Colors.black87,
+                color: isDark ? Colors.white : Colors.black87,
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 8),
-
             AuthTextField(
               controller: _emailController,
               hintText: 'Enter your email',
-              prefixIcon:
-                  Icons.email_outlined,
-              keyboardType:
-                  TextInputType.emailAddress,
+              prefixIcon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
               isDark: isDark,
             ),
-
             const SizedBox(height: 20),
-
             Text(
               'Password',
               style: TextStyle(
-                color: isDark
-                    ? Colors.white
-                    : Colors.black87,
+                color: isDark ? Colors.white : Colors.black87,
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 8),
-
             AuthPasswordField(
               controller: _passwordController,
               hintText: 'Enter your password',
@@ -194,22 +164,17 @@ class _LoginScreenState extends State<LoginScreen> {
               isDark: isDark,
               onToggleVisibility: () {
                 setState(() {
-                  _obscurePassword =
-                      !_obscurePassword;
+                  _obscurePassword = !_obscurePassword;
                 });
               },
             ),
-
             const SizedBox(height: 30),
-
             AuthButton(
               isLoading: _isLoading,
               text: 'Login',
               onPressed: _login,
             ),
-
             const SizedBox(height: 20),
-
             Center(
               child: TextButton(
                 onPressed: _openRegister,

@@ -6,10 +6,12 @@ class AppTheme {
     scaffoldBackgroundColor:
         const Color(0xFFF5F5F5),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF3B82F6),
+      backgroundColor: Color(0xFFF5F5F5),
       elevation: 0,
+      scrolledUnderElevation: 0,
       centerTitle: true,
-      foregroundColor: Colors.white,
+      foregroundColor: Colors.black87,
+      surfaceTintColor: Colors.transparent,
     ),
   );
 
@@ -18,10 +20,12 @@ class AppTheme {
     scaffoldBackgroundColor:
         const Color(0xFF1C1C1E),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF3B82F6),
+      backgroundColor: Color(0xFF1C1C1E),
       elevation: 0,
+      scrolledUnderElevation: 0,
       centerTitle: true,
       foregroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
     ),
   );
 }

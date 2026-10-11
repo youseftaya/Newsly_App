@@ -20,20 +20,17 @@ class NewsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark =
-        Theme.of(context).brightness ==
-            Brightness.dark;
+        Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.only(
         bottom: 24,
       ),
       child: InkWell(
-        borderRadius:
-            BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Stack(
               children: [
@@ -45,10 +42,10 @@ class NewsCard extends StatelessWidget {
                   top: 10,
                   right: 10,
                   child: Container(
-                    decoration:
-                        BoxDecoration(
-                      color: Colors.black
-                          .withOpacity(0.65),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(
+                        alpha: 0.65,
+                      ),
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
@@ -66,9 +63,7 @@ class NewsCard extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 12),
-
             Text(
               article.category,
               style: TextStyle(
@@ -78,9 +73,7 @@ class NewsCard extends StatelessWidget {
                 fontSize: 14,
               ),
             ),
-
             const SizedBox(height: 6),
-
             Text(
               article.title,
               style: TextStyle(

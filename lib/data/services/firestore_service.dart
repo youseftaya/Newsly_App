@@ -19,7 +19,8 @@ class FirestoreService {
     return user.uid;
   }
 
-  CollectionReference<Map<String, dynamic>> get _favoritesCollection {
+  CollectionReference<Map<String, dynamic>>
+      get _favoritesCollection {
     return _firestore
         .collection('users')
         .doc(_userId)
@@ -35,6 +36,7 @@ class FirestoreService {
       'imageUrl': article.imageUrl,
       'description': article.description,
       'articleUrl': article.articleUrl,
+      'publishedAt': article.publishedAt,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
@@ -58,8 +60,10 @@ class FirestoreService {
         title: data['title'] ?? 'No title',
         imageUrl: data['imageUrl'] ?? '',
         description:
-            data['description'] ?? 'No description available.',
+            data['description'] ??
+                'No description available.',
         articleUrl: data['articleUrl'] ?? '',
+        publishedAt: data['publishedAt']?.toString(),
       );
     }).toList();
   }
@@ -75,4 +79,4 @@ class FirestoreService {
   String _createDocumentId(String url) {
     return url.hashCode.toString();
   }
-}
+} 

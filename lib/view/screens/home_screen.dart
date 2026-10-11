@@ -10,11 +10,14 @@ import '../widgets/news_search_bar.dart';
 import '../widgets/news_categories.dart';
 import '../widgets/news_card.dart';
 import 'article_screen.dart';
-import 'saved_news_screen.dart';
-import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String initialCategory;
+
+  const HomeScreen({
+    super.key,
+    this.initialCategory = 'general',
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -22,10 +25,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final NewsService _newsService = NewsService();
-
   final FirestoreService _firestoreService =
       FirestoreService();
-
   final AuthService _authService = AuthService();
 
   final TextEditingController _searchController =
@@ -35,17 +36,17 @@ class _HomeScreenState extends State<HomeScreen> {
       ScrollController();
 
   List<NewsArticle> articles = [];
-
   Set<String> favoriteUrls = {};
 
   bool isLoading = true;
   bool isLoadingMore = false;
   bool isSearching = false;
+  bool isRefreshing = false;
   bool hasMore = true;
 
   String? errorMessage;
 
-  String selectedCategory = 'general';
+  late String selectedCategory;
   int currentPage = 1;
 
   final List<Map<String, String>> categories = [
@@ -62,10 +63,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
+    selectedCategory = widget.initialCategory;
     _scrollController.addListener(_onScroll);
 
     _loadFavorites();
-    _loadNews();
+
+    if (selectedCategory == 'general') {
+      _loadNews();
+    } else {
+      _loadCategory(selectedCategory);
+    }
   }
 
   @override
@@ -75,6 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  // Load the user's saved articles from Firebase.
   Future<void> _loadFavorites() async {
     try {
       final favorites =
@@ -92,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Add or remove an article from Firebase favorites.
   Future<void> _toggleFavorite(
     NewsArticle article,
   ) async {
@@ -132,24 +141,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _logout() async {
     try {
       await _authService.logout();
-
-      if (!mounted) return;
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
-        ),
-        (route) => false,
-      );
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Logout failed: $e',
-          ),
+          content: Text('Logout failed: $e'),
         ),
       );
     }
@@ -160,16 +157,6 @@ class _HomeScreenState extends State<HomeScreen> {
         themeNotifier.value == ThemeMode.dark
             ? ThemeMode.light
             : ThemeMode.dark;
-  }
-
-  void _openSavedNews() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            const SavedNewsScreen(),
-      ),
-    );
   }
 
   void _onScroll() {
@@ -192,6 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
       selectedCategory = 'general';
       currentPage = 1;
       hasMore = true;
+      articles = [];
     });
 
     try {
@@ -204,10 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         articles = news;
         isLoading = false;
-
-        if (news.isEmpty) {
-          hasMore = false;
-        }
+        hasMore = news.isNotEmpty;
       });
     } catch (e) {
       if (!mounted) return;
@@ -223,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final query = _searchController.text.trim();
 
     if (query.isEmpty) {
-      _loadNews();
+      await _loadNews();
       return;
     }
 
@@ -234,6 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
       isSearching = true;
       currentPage = 1;
       hasMore = true;
+      articles = [];
     });
 
     try {
@@ -247,10 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         articles = news;
         isLoading = false;
-
-        if (news.isEmpty) {
-          hasMore = false;
-        }
+        hasMore = news.isNotEmpty;
       });
     } catch (e) {
       if (!mounted) return;
@@ -273,24 +256,29 @@ class _HomeScreenState extends State<HomeScreen> {
       selectedCategory = category;
       currentPage = 1;
       hasMore = true;
+      articles = [];
     });
 
     try {
-      final news =
-          await _newsService.getNewsByCategory(
-        category,
-        page: currentPage,
-      );
+      final List<NewsArticle> news;
+
+      if (category == 'general') {
+        news = await _newsService.getTopHeadlines(
+          page: currentPage,
+        );
+      } else {
+        news = await _newsService.getNewsByCategory(
+          category,
+          page: currentPage,
+        );
+      }
 
       if (!mounted) return;
 
       setState(() {
         articles = news;
         isLoading = false;
-
-        if (news.isEmpty) {
-          hasMore = false;
-        }
+        hasMore = news.isNotEmpty;
       });
     } catch (e) {
       if (!mounted) return;
@@ -302,8 +290,70 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _refreshNews() async {
+    if (isLoading || isRefreshing || isLoadingMore) {
+      return;
+    }
+
+    setState(() {
+      isRefreshing = true;
+    });
+
+    try {
+      final List<NewsArticle> news;
+
+      if (isSearching &&
+          _searchController.text.trim().isNotEmpty) {
+        news = await _newsService.searchNews(
+          _searchController.text.trim(),
+          page: 1,
+        );
+      } else if (selectedCategory == 'general') {
+        news = await _newsService.getTopHeadlines(
+          page: 1,
+        );
+      } else {
+        news = await _newsService.getNewsByCategory(
+          selectedCategory,
+          page: 1,
+        );
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        articles = news;
+        currentPage = 1;
+        hasMore = news.isNotEmpty;
+        errorMessage = null;
+        isRefreshing = false;
+      });
+
+      await _loadFavorites();
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isRefreshing = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not refresh news. Please try again.',
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _loadMoreNews() async {
-    if (isLoading || isLoadingMore || !hasMore) return;
+    if (isLoading ||
+        isLoadingMore ||
+        isRefreshing ||
+        !hasMore) {
+      return;
+    }
 
     setState(() {
       isLoadingMore = true;
@@ -315,12 +365,8 @@ class _HomeScreenState extends State<HomeScreen> {
       List<NewsArticle> newArticles;
 
       if (isSearching) {
-        final query =
-            _searchController.text.trim();
-
-        newArticles =
-            await _newsService.searchNews(
-          query,
+        newArticles = await _newsService.searchNews(
+          _searchController.text.trim(),
           page: nextPage,
         );
       } else if (selectedCategory == 'general') {
@@ -339,10 +385,24 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
 
       setState(() {
-        if (newArticles.isEmpty) {
+        final existingUrls = articles
+            .map((article) => article.articleUrl)
+            .toSet();
+
+        final uniqueArticles = newArticles
+            .where(
+              (article) =>
+                  !existingUrls.contains(
+                    article.articleUrl,
+                  ),
+            )
+            .toList();
+
+        if (newArticles.isEmpty ||
+            uniqueArticles.isEmpty) {
           hasMore = false;
         } else {
-          articles.addAll(newArticles);
+          articles.addAll(uniqueArticles);
           currentPage = nextPage;
         }
 
@@ -354,17 +414,35 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         isLoadingMore = false;
       });
+
+      debugPrint('Load more news error: $e');
     }
   }
 
   void _clearSearch() {
     _searchController.clear();
-
     _loadNews();
   }
 
   void _onSearchChanged() {
     setState(() {});
+  }
+
+  // Open the article details page and refresh saved status
+  // when the user returns to Home.
+  Future<void> _openArticle(NewsArticle article) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ArticleScreen(
+          article: article,
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+
+    await _loadFavorites();
   }
 
   @override
@@ -375,9 +453,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: HomeAppBar(
         isDark: isDark,
-        onLogout: _logout,
-        onSavedNews: _openSavedNews,
         onToggleTheme: _toggleTheme,
+        onRefresh: _refreshNews,
       ),
       body: Column(
         children: [
@@ -388,14 +465,12 @@ class _HomeScreenState extends State<HomeScreen> {
             onClear: _clearSearch,
             onChanged: _onSearchChanged,
           ),
-
           NewsCategories(
             categories: categories,
             selectedCategory: selectedCategory,
             isDark: isDark,
             onCategorySelected: _loadCategory,
           ),
-
           Expanded(
             child: _buildBody(),
           ),
@@ -419,8 +494,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
-            mainAxisAlignment:
-                MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(
                 Icons.error_outline,
@@ -440,18 +514,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () {
-                  if (isSearching) {
-                    _searchNews();
-                  } else {
-                    _loadCategory(
-                      selectedCategory,
-                    );
-                  }
-                },
-                child: const Text(
-                  'Try Again',
-                ),
+                onPressed: _refreshNews,
+                child: const Text('Try Again'),
               ),
             ],
           ),
@@ -460,65 +524,69 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (articles.isEmpty) {
-      return Center(
-        child: Text(
-          isSearching
-              ? 'No news found.'
-              : 'No news available.',
-          style: TextStyle(
-            color: isDark
-                ? Colors.white
-                : Colors.black87,
-            fontSize: 16,
-          ),
+      return RefreshIndicator(
+        onRefresh: _refreshNews,
+        child: ListView(
+          physics:
+              const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: 300,
+              child: Center(
+                child: Text(
+                  isSearching
+                      ? 'No news found.'
+                      : 'No news available.',
+                  style: TextStyle(
+                    color: isDark
+                        ? Colors.white
+                        : Colors.black87,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(16),
-      itemCount:
-          articles.length +
-          (isLoadingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == articles.length) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: 20,
-            ),
-            child: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-
-        final article = articles[index];
-
-        final isFavorite =
-            favoriteUrls.contains(
-          article.articleUrl,
-        );
-
-        return NewsCard(
-          article: article,
-          isFavorite: isFavorite,
-          onFavorite: () {
-            _toggleFavorite(article);
-          },
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    ArticleScreen(
-                  article: article,
-                ),
+    return RefreshIndicator(
+      onRefresh: _refreshNews,
+      child: ListView.builder(
+        physics:
+            const AlwaysScrollableScrollPhysics(),
+        controller: _scrollController,
+        padding: const EdgeInsets.all(16),
+        itemCount:
+            articles.length + (isLoadingMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == articles.length) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: 20,
+              ),
+              child: Center(
+                child: CircularProgressIndicator(),
               ),
             );
-          },
-        );
-      },
+          }
+
+          final article = articles[index];
+          final isFavorite =
+              favoriteUrls.contains(
+            article.articleUrl,
+          );
+
+          return NewsCard(
+            article: article,
+            isFavorite: isFavorite,
+            onFavorite: () =>
+                _toggleFavorite(article),
+            onTap: () => _openArticle(article),
+          );
+        },
+      ),
     );
   }
 }

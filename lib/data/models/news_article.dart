@@ -4,6 +4,7 @@ class NewsArticle {
   final String imageUrl;
   final String description;
   final String articleUrl;
+  final String? publishedAt;
 
   const NewsArticle({
     required this.category,
@@ -11,15 +12,20 @@ class NewsArticle {
     required this.imageUrl,
     required this.description,
     required this.articleUrl,
+    this.publishedAt,
   });
 
-  factory NewsArticle.fromJson(Map<String, dynamic> json) {
+  factory NewsArticle.fromJson(
+    Map<String, dynamic> json,
+  ) {
     return NewsArticle(
       category: json['source']?['name'] ?? 'News',
       title: json['title'] ?? 'No title',
       imageUrl: json['image'] ?? '',
-      description: json['description'] ?? 'No description available.',
+      description:
+          json['description'] ?? 'No description available.',
       articleUrl: json['url'] ?? '',
+      publishedAt: json['publishedAt']?.toString(),
     );
   }
 }
