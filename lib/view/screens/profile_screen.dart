@@ -43,7 +43,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadProfileSettings();
   }
 
-  // Load saved profile settings.
   Future<void> _loadProfileSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -85,7 +84,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Edit and save profile name.
   Future<void> _editName() async {
     final l10n = AppLocalizations.of(context);
     final controller = TextEditingController(text: _displayName);
@@ -163,7 +161,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Select, resize, compress, and save profile image.
   Future<void> _pickProfileImage() async {
     try {
       final pickedFile = await ImagePicker().pickImage(
@@ -232,7 +229,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Remove saved profile image.
   Future<void> _removeProfileImage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -257,7 +253,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Display image options.
   void _showPhotoOptions() {
     final l10n = AppLocalizations.of(context);
 
@@ -294,7 +289,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Change language preference.
   Future<void> _chooseLanguage() async {
     final l10n = AppLocalizations.of(context);
 
@@ -304,21 +298,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return SimpleDialog(
           title: Text(l10n.chooseLanguage),
           children: [
-            RadioListTile<String>(
-              value: 'English',
+            RadioGroup<String>(
               groupValue: _language,
-              title: Text(l10n.english),
               onChanged: (value) {
-                Navigator.pop(dialogContext, value);
+                if (value != null) {
+                  Navigator.pop(dialogContext, value);
+                }
               },
-            ),
-            RadioListTile<String>(
-              value: 'العربية',
-              groupValue: _language,
-              title: Text(l10n.arabic),
-              onChanged: (value) {
-                Navigator.pop(dialogContext, value);
-              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RadioListTile<String>(
+                    value: 'English',
+                    title: Text(l10n.english),
+                  ),
+                  RadioListTile<String>(
+                    value: 'العربية',
+                    title: Text(l10n.arabic),
+                  ),
+                ],
+              ),
             ),
           ],
         );
@@ -360,7 +359,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Change font size across the application.
   Future<void> _chooseFontSize() async {
     final l10n = AppLocalizations.of(context);
 
@@ -372,21 +370,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _text('Choose Font Size', 'اختر حجم الخط'),
           ),
           children: [
-            for (final size in ['Small', 'Medium', 'Large'])
-              RadioListTile<String>(
-                value: size,
-                groupValue: _fontSize,
-                title: Text(
-                  switch (size) {
-                    'Small' => l10n.small,
-                    'Large' => l10n.large,
-                    _ => l10n.medium,
-                  },
-                ),
-                onChanged: (value) {
+            RadioGroup<String>(
+              groupValue: _fontSize,
+              onChanged: (value) {
+                if (value != null) {
                   Navigator.pop(dialogContext, value);
-                },
+                }
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RadioListTile<String>(
+                    value: 'Small',
+                    title: Text(l10n.small),
+                  ),
+                  RadioListTile<String>(
+                    value: 'Medium',
+                    title: Text(l10n.medium),
+                  ),
+                  RadioListTile<String>(
+                    value: 'Large',
+                    title: Text(l10n.large),
+                  ),
+                ],
               ),
+            ),
           ],
         );
       },
@@ -411,9 +419,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _fontSize = selected;
       });
 
-      _showMessage(
-        AppLocalizations.of(context).fontSizeUpdated,
-      );
+      _showMessage(AppLocalizations.of(context).fontSizeUpdated);
     } catch (e) {
       if (!mounted) return;
 
@@ -426,7 +432,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Change and persist theme.
   Future<void> _setDarkMode(bool enabled) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -447,7 +452,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Save notification preference.
   Future<void> _setNotifications(bool enabled) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -486,7 +490,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Sign out.
   Future<void> _logout() async {
     try {
       await AuthService().logout();
@@ -502,7 +505,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Show feedback to user.
   void _showMessage(String message) {
     if (!mounted) return;
 

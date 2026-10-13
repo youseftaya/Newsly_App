@@ -2,10 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/localization/app_localizations.dart';
 import 'core/theme/app_theme.dart';
+import 'providers/news_provider.dart';
 import 'firebase_options.dart';
 import 'view/screens/login_screen.dart';
 import 'view/screens/main_navigation_screen.dart';
@@ -28,7 +30,12 @@ Future<void> main() async {
 
   await _loadAppPreferences();
 
-  runApp(const NewslyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => NewsProvider(),
+      child: const NewslyApp(),
+    ),
+  );
 }
 
 Future<void> _loadAppPreferences() async {
